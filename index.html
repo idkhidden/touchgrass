@@ -160,7 +160,7 @@ async function fetchBoard(){
     arr.sort((a,b)=> (b.elapsed||0)-(a.elapsed||0));
     render(arr);
   }catch(err){
-    boardEl.innerHTML=`<div class="empty">Failed to load leaderboard — ${err.message||err}</div>`;
+    boardEl.innerHTML=`<div class="empty">Took server down due to exploiting — ${err.message||err}</div>`;
     console.error("TouchGrass fetch error:",err);
   }
 }
@@ -178,4 +178,5 @@ fetchBoard();
 </script>
 </body>
 </html>
+
 
