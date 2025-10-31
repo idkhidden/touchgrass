@@ -1,6 +1,6 @@
 # TouchGrass
 
-IDA plugin that tracks how long you spend in IDA and displays a [leaderboard](https://int3.club/touchgrass/).  
+IDA plugin that tracks how long you spend in IDA and displays a [leaderboard](https://int3.club/touchgrass/) globally.  
 
 ## Leaderboard
 View the leaderboard at: [https://int3.club/touchgrass/](https://int3.club/touchgrass/)
