@@ -13,6 +13,9 @@ View the leaderboard at: [int3.club/touchgrass/](https://int3.club/touchgrass/)
 ## Installation
 Copy `touchgrass.py` to your IDA plugins folder and restart IDA.
 
+## Compatibility
+- IDA 7.4 → IDA 9.x
+
 ## Usage
 Open Edit → TouchGrass to start or stop tracking your time.  
 
