@@ -8,7 +8,7 @@ CORS(app)
 
 users = {}
 new_user_timestamps = deque(maxlen=1000)
-MAX_NEW_USERS_PER_SECOND = 1
+MAX_NEW_USERS_PER_SECOND = 3
 
 
 def make_unique_username(uname):
@@ -37,7 +37,7 @@ def update_time():
     user_id = data.get("user_id")
     uname = data.get("username", "Anonymous")
     elapsed = float(data.get("elapsed", 0.0))
-    closing = data.get("closing", False)
+    closing = bool(data.get("closing", False))
 
     if not user_id:
         return jsonify({"error": "Missing user_id"}), 400
@@ -55,23 +55,20 @@ def update_time():
             "elapsed": 0.0,
             "last_seen": now,
             "last_reported": elapsed,
-            "last_update_time": now, 
+            "last_update_time": now,
         }
 
     user = users[user_id]
     prev_elapsed = user["last_reported"]
     prev_update_time = user["last_update_time"]
+
     delta = elapsed - prev_elapsed
     real_delta = now - prev_update_time
 
-    # Sanity checks
     if delta < 0:
-        return jsonify({"error": "Elapsed time cannot decrease"}), 400
-    elif delta > 120:
-        return jsonify({"error": "Elapsed time increment too large"}), 400
-
-    if abs(delta - real_delta) > 10:
-        return jsonify({"error": "Elapsed time mismatch with real time"}), 400
+        delta = 0
+    elif delta > 60:
+        delta = 60
 
     user["elapsed"] += delta
     user["last_reported"] = elapsed
@@ -79,11 +76,15 @@ def update_time():
     user["last_update_time"] = now
 
     if closing:
-        print(f"[touchgrass] {user['username']} closed IDA. Total time: {user['elapsed']:.1f}s")
+        print(f"[touchgrass] {user['username']} closed IDA — total {user['elapsed']:.1f}s")
     else:
-        print(f"[touchgrass] {user['username']} updated: +{delta:.1f}s (total {user['elapsed']:.1f}s)")
+        print(f"[touchgrass] {user['username']} +{delta:.1f}s (total {user['elapsed']:.1f}s)")
 
-    return jsonify({"ok": True, "username": user["username"], "total": user["elapsed"]})
+    return jsonify({
+        "ok": True,
+        "username": user["username"],
+        "total": round(user["elapsed"], 1)
+    })
 
 
 @app.route("/leaderboard", methods=["GET"])
@@ -91,15 +92,17 @@ def leaderboard():
     now = time.time()
     leaderboard_data = []
     for info in users.values():
-        online = (now - info["last_seen"]) < 120
+        online = (now - info["last_seen"]) < 90  
         leaderboard_data.append({
             "username": info["username"],
             "elapsed": round(info["elapsed"], 1),
             "online": online
         })
+
     leaderboard_data.sort(key=lambda x: x["elapsed"], reverse=True)
     return jsonify(leaderboard_data)
 
 
 if __name__ == "__main__":
+    print("[touchgrass] Server started on port 1337")
     app.run(host="0.0.0.0", port=1337)
