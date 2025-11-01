@@ -4,6 +4,7 @@
     "name": "touchgrass",
     "entryPoint": "touchgrass.py",
     "categories": ["integration-with-third-parties-interoperability", "other"],
+    "logoPath": "",
     "idaVersions": ">=7.4",
     "description": "IDA plugin that tracks how long you spend in IDA and displays a leaderboard globally.",
     "version": "1.0.0"
