@@ -36,7 +36,10 @@ def update_time():
     data = request.json or {}
     user_id = data.get("user_id")
     uname = data.get("username", "Anonymous")
-    elapsed = float(data.get("elapsed", 0.0))
+    try:
+        elapsed = float(data.get("elapsed", 0.0))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Invalid elapsed"}), 400
     closing = bool(data.get("closing", False))
 
     if not user_id:
@@ -57,6 +60,7 @@ def update_time():
             "last_reported": elapsed,
             "last_update_time": now,
         }
+        print(f"[touchgrass] created user {uname}")
 
     user = users[user_id]
     prev_elapsed = user["last_reported"]
@@ -67,8 +71,16 @@ def update_time():
 
     if delta < 0:
         delta = 0
-    elif delta > 60:
-        delta = 60
+
+    if delta == 0:
+        user["last_seen"] = now
+        user["last_update_time"] = now
+        print(f"[touchgrass] {user['username']} heartbeat (total {user['elapsed']:.1f}s)")
+        return jsonify({"ok": True, "username": user["username"], "total": round(user["elapsed"], 1)})
+
+    max_allowed = real_delta * 2.0
+    if delta > max_allowed:
+        delta = real_delta
 
     user["elapsed"] += delta
     user["last_reported"] = elapsed
@@ -92,7 +104,7 @@ def leaderboard():
     now = time.time()
     leaderboard_data = []
     for info in users.values():
-        online = (now - info["last_seen"]) < 90  
+        online = (now - info["last_seen"]) < 120
         leaderboard_data.append({
             "username": info["username"],
             "elapsed": round(info["elapsed"], 1),
